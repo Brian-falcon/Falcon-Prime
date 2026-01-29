@@ -111,18 +111,22 @@ export async function PUT(
         });
       }
     }
-    const [p] = await db.select().from(products).where(eq(products.id, id)).limit(1);
-    if (!p) return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
-    const [cat] = await db.select().from(categories).where(eq(categories.id, p.categoryId)).limit(1);
-    const imgs = await db.select().from(productImages).where(eq(productImages.productId, id));
-    const szs = await db.select().from(productSizes).where(eq(productSizes.productId, id));
-    const product = {
-      ...p,
-      category: cat ?? { id: p.categoryId, name: "", slug: "" },
-      images: imgs,
-      sizes: szs,
-    };
-    return NextResponse.json(product);
+    try {
+      const [p] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+      if (!p) return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+      const [cat] = await db.select().from(categories).where(eq(categories.id, p.categoryId)).limit(1);
+      const imgs = await db.select().from(productImages).where(eq(productImages.productId, id));
+      const szs = await db.select().from(productSizes).where(eq(productSizes.productId, id));
+      const product = {
+        ...p,
+        category: cat ?? { id: p.categoryId, name: "", slug: "" },
+        images: imgs,
+        sizes: szs,
+      };
+      return NextResponse.json(product);
+    } catch (_fetchErr) {
+      return NextResponse.json({ ok: true, productUpdated: true });
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("Update product error:", e);

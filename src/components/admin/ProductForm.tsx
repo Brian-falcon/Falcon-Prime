@@ -165,6 +165,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
         setSaving(false);
         return;
       }
+      setSaving(false);
       onSuccess();
     } catch {
       setError("Error de conexión");

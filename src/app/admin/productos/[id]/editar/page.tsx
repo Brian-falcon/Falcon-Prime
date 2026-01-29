@@ -26,6 +26,7 @@ export default function AdminProductosEditarPage() {
       <ProductForm
         productId={id}
         onSuccess={() => {
+          router.push("/admin/productos");
           router.refresh();
         }}
       />
