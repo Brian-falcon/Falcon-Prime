@@ -44,7 +44,7 @@ export async function GET() {
       });
     }
     const productIds = productRows.map((p) => p.id);
-    const categoryIds = [...new Set(productRows.map((p) => p.categoryId))];
+    const categoryIds = Array.from(new Set(productRows.map((p) => p.categoryId)));
     const [categoryRows, imageRows, sizeRows] = await Promise.all([
       db.select({ id: categories.id, name: categories.name, slug: categories.slug }).from(categories).where(inArray(categories.id, categoryIds)),
       db.select().from(productImages).where(inArray(productImages.productId, productIds)),
