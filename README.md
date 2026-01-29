@@ -64,11 +64,20 @@ Falcon-Prime/
 └── package.json
 ```
 
-## Si los productos no aparecen en el sitio
+## Si los productos no aparecen (error de conexión)
 
-1. **Vercel:** En el proyecto → **Settings** → **Environment Variables**, agregá **`DATABASE_URL`** con la connection string de Neon (la misma que usás en Neon Console). Asignala a **Production** y **Preview**. Luego **Redeploy** (Deployments → ⋮ → Redeploy).
-2. **Local:** Verificá que `.env.local` exista en la raíz del proyecto y tenga `DATABASE_URL=postgresql://...` (tu URL de Neon).
-3. **Cargar productos:** Si la base está vacía, ejecutá `npm run seed` y después `npm run seed-products`.
+1. **Verificar conexión:** Abrí en el navegador **`https://tu-app.vercel.app/api/db-check`**.  
+   - Si devuelve `productCount: 0` pero en Neon Studio ves productos → **DATABASE_URL en Vercel no apunta a la misma base** (revisá branch **production** y proyecto en Neon).  
+   - Si devuelve error → **DATABASE_URL** falta o está mal (espacios, comillas, URL vieja).
+
+2. **Vercel:** Settings → **Environment Variables** → **`DATABASE_URL`** debe ser **exactamente** la connection string de Neon:  
+   - Neon Console → tu proyecto → **Connection string** → **Branch: production** → copiar.  
+   - Pegar en Vercel **sin espacios ni comillas**. Asignar a **Production** y **Preview**.  
+   - **Redeploy** (Deployments → ⋮ → Redeploy).
+
+3. **Local:** `.env.local` en la raíz con `DATABASE_URL=postgresql://...` (tu URL de Neon).
+
+4. **Cargar productos:** Si la base está vacía: `npm run seed` y luego `npm run seed-products`.
 
 ## Funcionalidades
 

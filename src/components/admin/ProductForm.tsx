@@ -160,7 +160,8 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "Error al guardar");
+        const msg = data.error ?? "Error al guardar";
+        setError(data.details ? `${msg}: ${data.details}` : msg);
         setSaving(false);
         return;
       }
