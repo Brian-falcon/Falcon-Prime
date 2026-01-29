@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get("maxPrice") ?? undefined;
 
     // No filtrar por is_active: mostrar todos los productos (evita que Neon devuelva vacío si el booleano difiere)
-    const conditions: unknown[] = [];
+    const conditions: (ReturnType<typeof eq> | ReturnType<typeof gte> | ReturnType<typeof lte>)[] = [];
 
     if (categoriaSlug) {
       const catRows = await db
