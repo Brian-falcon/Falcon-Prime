@@ -1,0 +1,235 @@
+"use client";
+
+/**
+ * Catálogo de la tienda con filtros (categoría, talle, color, precio).
+ */
+import { useEffect, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { formatPrice } from "@/lib/utils";
+
+type Category = { id: string; name: string; slug: string };
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  price: string;
+  color: string | null;
+  category: Category;
+  images: { id: string; url: string; alt: string | null; sortOrder: number }[];
+  sizes: { id: string; size: string; stock: number }[];
+};
+
+export default function TiendaPage() {
+  const searchParams = useSearchParams();
+  const initialCategoria = useMemo(
+    () => searchParams.get("categoria") ?? "",
+    [searchParams]
+  );
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    categoria: initialCategoria,
+    talle: "",
+    color: "",
+    minPrice: "",
+    maxPrice: "",
+  });
+
+  useEffect(() => {
+    setFilters((f) => ({ ...f, categoria: initialCategoria }));
+  }, [initialCategoria]);
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filters.categoria) params.set("categoria", filters.categoria);
+    if (filters.talle) params.set("talle", filters.talle);
+    if (filters.color) params.set("color", filters.color);
+    if (filters.minPrice) params.set("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+    try {
+      const res = await fetch(`/api/products?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
+    } catch {
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const res = await fetch("/api/categories");
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  const colors = Array.from(
+    new Set(products.map((p) => p.color).filter(Boolean)) as Set<string>
+  ).sort();
+
+  const uniqueSizes = Array.from(
+    new Set(products.flatMap((p) => p.sizes.map((s) => s.size)))
+  ).filter(Boolean).sort();
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
+        <div className="container-fp flex items-center justify-between h-16">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-fp-black">
+            FALCON PRIME
+          </Link>
+          <nav className="hidden md:flex gap-8 text-sm text-fp-gray hover:[&>a]:text-fp-black">
+            <Link href="/tienda">Tienda</Link>
+            <Link href="/tienda?categoria=ropa">Ropa</Link>
+            <Link href="/tienda?categoria=calzado">Calzado</Link>
+            <Link href="/tienda?categoria=accesorios">Accesorios</Link>
+            <Link href="/carrito">Carrito</Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 container-fp py-8">
+        <h1 className="text-3xl font-light text-fp-black mb-6">Tienda</h1>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          <aside className="lg:w-56 shrink-0">
+            <div className="space-y-4 text-sm">
+              <div>
+                <label className="block font-medium text-fp-black mb-1">Categoría</label>
+                <select
+                  value={filters.categoria}
+                  onChange={(e) => setFilters((f) => ({ ...f, categoria: e.target.value }))}
+                  className="w-full border border-gray-200 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-fp-black"
+                >
+                  <option value="">Todas</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-medium text-fp-black mb-1">Talle</label>
+                <select
+                  value={filters.talle}
+                  onChange={(e) => setFilters((f) => ({ ...f, talle: e.target.value }))}
+                  className="w-full border border-gray-200 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-fp-black"
+                >
+                  <option value="">Todos</option>
+                  {uniqueSizes.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {colors.length > 0 && (
+                <div>
+                  <label className="block font-medium text-fp-black mb-1">Color</label>
+                  <select
+                    value={filters.color}
+                    onChange={(e) => setFilters((f) => ({ ...f, color: e.target.value }))}
+                    className="w-full border border-gray-200 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-fp-black"
+                  >
+                    <option value="">Todos</option>
+                    {colors.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-medium text-fp-black mb-1">Precio mín</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={filters.minPrice}
+                    onChange={(e) => setFilters((f) => ({ ...f, minPrice: e.target.value }))}
+                    placeholder="0"
+                    className="w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-fp-black mb-1">Precio máx</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={filters.maxPrice}
+                    onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value }))}
+                    placeholder="—"
+                    className="w-full border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+                  />
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <div className="flex-1">
+            {loading ? (
+              <p className="text-fp-gray">Cargando…</p>
+            ) : products.length === 0 ? (
+              <p className="text-fp-gray">No hay productos con esos filtros.</p>
+            ) : (
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                {products.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/tienda/${p.slug}`}
+                      className="block group"
+                    >
+                      <div className="aspect-[3/4] bg-fp-light mb-2 overflow-hidden relative">
+                        {p.images[0] ? (
+                          <img
+                            src={p.images[0].url}
+                            alt={p.images[0].alt ?? p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-fp-gray text-sm">
+                            Sin imagen
+                          </div>
+                        )}
+                      </div>
+                      <p className="font-medium text-fp-black text-sm group-hover:underline">
+                        {p.name}
+                      </p>
+                      <p className="text-fp-gray text-sm mt-0.5">
+                        {formatPrice(parseFloat(p.price), { currency: "ARS" })}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-t border-gray-200 py-8 mt-auto">
+        <div className="container-fp text-center text-sm text-fp-gray">
+          <p>© {new Date().getFullYear()} Falcon Prime.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
