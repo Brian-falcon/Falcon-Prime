@@ -14,5 +14,4 @@ if (!connectionString) {
 
 const sql = neon(connectionString);
 // Assertión de tipo: incompatibilidad de genéricos entre @neondatabase/serverless y drizzle-orm; en runtime son compatibles
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = drizzle(sql as any, { schema });
