@@ -23,22 +23,24 @@ export default function AdminProductosPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function loadProducts() {
       try {
-        const res = await fetch("/api/admin/products");
+        const res = await fetch("/api/admin/products", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError("Error al cargar productos");
+          setError(data?.error ?? "Error al cargar productos");
+          setProducts([]);
           return;
         }
-        const data = await res.json();
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch {
-        setError("Error de conexión");
+        setError("Error de conexión. Revisá que DATABASE_URL esté en Vercel.");
+        setProducts([]);
       } finally {
         setLoading(false);
       }
     }
-    fetchProducts();
+    loadProducts();
   }, []);
 
   async function handleDelete(id: string, name: string) {

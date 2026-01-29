@@ -64,6 +64,12 @@ Falcon-Prime/
 └── package.json
 ```
 
+## Si los productos no aparecen en el sitio
+
+1. **Vercel:** En el proyecto → **Settings** → **Environment Variables**, agregá **`DATABASE_URL`** con la connection string de Neon (la misma que usás en Neon Console). Asignala a **Production** y **Preview**. Luego **Redeploy** (Deployments → ⋮ → Redeploy).
+2. **Local:** Verificá que `.env.local` exista en la raíz del proyecto y tenga `DATABASE_URL=postgresql://...` (tu URL de Neon).
+3. **Cargar productos:** Si la base está vacía, ejecutá `npm run seed` y después `npm run seed-products`.
+
 ## Funcionalidades
 
 - **Tienda:** Home, catálogo con filtros (categoría, talle, color, precio), ficha de producto, carrito, checkout.

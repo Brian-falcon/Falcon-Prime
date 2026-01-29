@@ -28,12 +28,20 @@ async function seed() {
     ropa: generateId(),
     calzado: generateId(),
     accesorios: generateId(),
+    hombre: generateId(),
+    mujer: generateId(),
+    ninos: generateId(),
+    deportes: generateId(),
   };
 
   await db.insert(schema.categories).values([
     { id: categoryIds.ropa, name: "Ropa", slug: "ropa" },
     { id: categoryIds.calzado, name: "Calzado", slug: "calzado" },
     { id: categoryIds.accesorios, name: "Accesorios", slug: "accesorios" },
+    { id: categoryIds.hombre, name: "Hombre", slug: "hombre" },
+    { id: categoryIds.mujer, name: "Mujer", slug: "mujer" },
+    { id: categoryIds.ninos, name: "Niños", slug: "ninos" },
+    { id: categoryIds.deportes, name: "Deportes", slug: "deportes" },
   ]).onConflictDoNothing({ target: schema.categories.slug });
 
   const passwordHash = await bcrypt.hash(adminPassword, 10);
@@ -46,7 +54,7 @@ async function seed() {
   }).onConflictDoNothing({ target: schema.admins.email });
 
   console.log("Seed completado.");
-  console.log("Categorías: Ropa, Calzado, Accesorios");
+  console.log("Categorías: Ropa, Calzado, Accesorios, Hombre, Mujer, Niños, Deportes");
   console.log("Admin:", adminEmail, "| Contraseña:", adminPassword);
 }
 

@@ -1,6 +1,7 @@
 /**
  * Conexión a la base de datos Neon (PostgreSQL)
  * Usa drizzle-orm/neon-http para entornos serverless (Vercel).
+ * Inicialización perezosa: no falla en build si falta DATABASE_URL; falla al primer uso si falta.
  * @see https://orm.drizzle.team/docs/connect-neon
  */
 import { neon } from "@neondatabase/serverless";
@@ -9,23 +10,31 @@ import * as schema from "./schema";
 
 function normalizeConnectionString(value: string): string {
   let url = value.trim();
-  // Quitar prefijo "psql " o "psql '" si se copió desde la consola de Neon
   if (url.toLowerCase().startsWith("psql ")) {
     url = url.slice(5).trim();
   }
-  // Quitar comillas simples o dobles al inicio y final
   if ((url.startsWith("'") && url.endsWith("'")) || (url.startsWith('"') && url.endsWith('"'))) {
     url = url.slice(1, -1);
   }
   return url;
 }
 
-const raw = process.env.DATABASE_URL;
-if (!raw) {
-  throw new Error("DATABASE_URL no está definida en las variables de entorno.");
+let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
+
+function getDb() {
+  if (dbInstance) return dbInstance;
+  const raw = process.env.DATABASE_URL;
+  if (!raw) {
+    throw new Error("DATABASE_URL no está definida. Configurala en Vercel (Settings → Environment Variables) o en .env.local.");
+  }
+  const connectionString = normalizeConnectionString(raw);
+  const sql = neon(connectionString);
+  dbInstance = drizzle(sql as any, { schema }) as ReturnType<typeof drizzle<typeof schema>>;
+  return dbInstance;
 }
 
-const connectionString = normalizeConnectionString(raw);
-const sql = neon(connectionString);
-// Assertión de tipo: incompatibilidad de genéricos entre @neondatabase/serverless y drizzle-orm; en runtime son compatibles
-export const db = drizzle(sql as any, { schema });
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_, prop) {
+    return (getDb() as Record<string, unknown>)[prop as string];
+  },
+});

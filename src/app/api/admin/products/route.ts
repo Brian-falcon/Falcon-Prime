@@ -11,9 +11,12 @@ import {
   productSizes,
   categories,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { slugify, generateId } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const createProductSchema = z.object({
   name: z.string().min(1),
@@ -26,19 +29,62 @@ const createProductSchema = z.object({
 });
 
 export async function GET() {
-  const adminId = await getAdminSession();
-  if (!adminId) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    const adminId = await getAdminSession();
+    if (!adminId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+    const productRows = await db
+      .select()
+      .from(products)
+      .orderBy(desc(products.createdAt));
+    if (productRows.length === 0) {
+      return NextResponse.json([], {
+        headers: { "Cache-Control": "no-store, max-age=0" },
+      });
+    }
+    const productIds = productRows.map((p) => p.id);
+    const categoryIds = [...new Set(productRows.map((p) => p.categoryId))];
+    const [categoryRows, imageRows, sizeRows] = await Promise.all([
+      db.select({ id: categories.id, name: categories.name, slug: categories.slug }).from(categories).where(inArray(categories.id, categoryIds)),
+      db.select().from(productImages).where(inArray(productImages.productId, productIds)),
+      db.select().from(productSizes).where(inArray(productSizes.productId, productIds)),
+    ]);
+    const catMap = Object.fromEntries(categoryRows.map((c) => [c.id, c]));
+    const imagesByProduct = productIds.reduce<Record<string, typeof imageRows>>((acc, id) => {
+      acc[id] = [];
+      return acc;
+    }, {});
+    for (const img of imageRows) {
+      if (imagesByProduct[img.productId]) imagesByProduct[img.productId].push(img);
+    }
+    const sizesByProduct = productIds.reduce<Record<string, typeof sizeRows>>((acc, id) => {
+      acc[id] = [];
+      return acc;
+    }, {});
+    for (const s of sizeRows) {
+      if (sizesByProduct[s.productId]) sizesByProduct[s.productId].push(s);
+    }
+    const list = productRows.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: String(p.price ?? ""),
+      isActive: p.isActive,
+      category: catMap[p.categoryId] ?? { id: p.categoryId, name: "", slug: "" },
+      images: (imagesByProduct[p.id] ?? []).map((img) => ({ id: img.id, url: img.url, alt: img.alt, sortOrder: img.sortOrder })),
+      sizes: (sizesByProduct[p.id] ?? []).map((s) => ({ id: s.id, size: s.size, stock: s.stock })),
+    }));
+    return NextResponse.json(list, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  } catch (err) {
+    console.error("GET /api/admin/products error:", err);
+    return NextResponse.json(
+      { error: "Error al conectar con la base de datos. Revisá DATABASE_URL en Vercel (Production y Preview)." },
+      { status: 500 }
+    );
   }
-  const list = await db.query.products.findMany({
-    orderBy: (p, { desc }) => [desc(p.createdAt)],
-    with: {
-      category: { columns: { id: true, name: true, slug: true } },
-      images: { columns: { id: true, url: true, alt: true, sortOrder: true } },
-      sizes: { columns: { id: true, size: true, stock: true } },
-    },
-  });
-  return NextResponse.json(list);
 }
 
 export async function POST(request: NextRequest) {

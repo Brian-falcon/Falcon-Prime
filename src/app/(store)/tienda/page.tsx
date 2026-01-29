@@ -29,6 +29,7 @@ function TiendaContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     categoria: initialCategoria,
     talle: "",
@@ -43,6 +44,7 @@ function TiendaContent() {
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setApiError(null);
     const params = new URLSearchParams();
     if (filters.categoria) params.set("categoria", filters.categoria);
     if (filters.talle) params.set("talle", filters.talle);
@@ -50,13 +52,20 @@ function TiendaContent() {
     if (filters.minPrice) params.set("minPrice", filters.minPrice);
     if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
     try {
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await fetch(`/api/products?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const data = await res.json().catch(() => []);
       if (res.ok) {
-        const data = await res.json();
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
+      } else {
+        setProducts([]);
+        setApiError(data?.error ?? "Error al cargar productos");
       }
     } catch {
       setProducts([]);
+      setApiError("No se pudo conectar. Revisá que DATABASE_URL esté en Vercel.");
     } finally {
       setLoading(false);
     }
@@ -68,7 +77,10 @@ function TiendaContent() {
 
   useEffect(() => {
     async function loadCategories() {
-      const res = await fetch("/api/categories");
+      const res = await fetch("/api/categories", {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       if (res.ok) {
         const data = await res.json();
         setCategories(data);
@@ -185,7 +197,13 @@ function TiendaContent() {
           </aside>
 
           <div className="flex-1">
-            {loading ? (
+            {apiError ? (
+              <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                <p className="font-medium">Error al cargar la tienda</p>
+                <p className="mt-1">{apiError}</p>
+                <p className="mt-2 text-xs">Si estás en Vercel: Settings → Environment Variables → agregá DATABASE_URL (tu connection string de Neon).</p>
+              </div>
+            ) : loading ? (
               <p className="text-fp-gray">Cargando…</p>
             ) : products.length === 0 ? (
               <p className="text-fp-gray">No hay productos con esos filtros.</p>
