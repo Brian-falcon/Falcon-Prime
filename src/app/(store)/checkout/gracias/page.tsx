@@ -3,10 +3,11 @@
 /**
  * Página de confirmación después del checkout.
  */
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function CheckoutGraciasPage() {
+function GraciasContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") ?? "";
 
@@ -45,5 +46,17 @@ export default function CheckoutGraciasPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function CheckoutGraciasPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-fp-gray">Cargando…</p>
+      </div>
+    }>
+      <GraciasContent />
+    </Suspense>
   );
 }

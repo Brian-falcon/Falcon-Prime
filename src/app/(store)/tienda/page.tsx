@@ -3,7 +3,7 @@
 /**
  * Catálogo de la tienda con filtros (categoría, talle, color, precio).
  */
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
@@ -20,7 +20,7 @@ type Product = {
   sizes: { id: string; size: string; stock: number }[];
 };
 
-export default function TiendaPage() {
+function TiendaContent() {
   const searchParams = useSearchParams();
   const initialCategoria = useMemo(
     () => searchParams.get("categoria") ?? "",
@@ -231,5 +231,17 @@ export default function TiendaPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function TiendaPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-fp-gray">Cargando…</p>
+      </div>
+    }>
+      <TiendaContent />
+    </Suspense>
   );
 }
