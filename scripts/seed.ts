@@ -21,7 +21,7 @@ const adminEmail = process.env.ADMIN_EMAIL ?? "admin@falconprime.com";
 const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
 
 async function seed() {
-  const sql = neon(connectionString);
+  const sql = neon(connectionString!);
   const db = drizzle(sql, { schema });
 
   const categoryIds = {
