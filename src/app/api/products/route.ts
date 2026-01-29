@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productImages, productSizes, categories } from "@/db/schema";
-import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,25 +13,25 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const categoriaSlug = searchParams.get("categoria") ?? undefined;
+    const categoriaSlugRaw = searchParams.get("categoria") ?? undefined;
+    const categoriaSlug = categoriaSlugRaw?.trim().toLowerCase() || undefined;
     const talle = searchParams.get("talle") ?? undefined;
     const color = searchParams.get("color") ?? undefined;
     const minPrice = searchParams.get("minPrice") ?? undefined;
     const maxPrice = searchParams.get("maxPrice") ?? undefined;
 
-    const conditions = [eq(products.isActive, true)];
+    // No filtrar por is_active: mostrar todos los productos (evita que Neon devuelva vacío si el booleano difiere)
+    const conditions: unknown[] = [];
 
     if (categoriaSlug) {
       const catRows = await db
         .select({ id: categories.id })
         .from(categories)
-        .where(eq(categories.slug, categoriaSlug))
+        .where(sql`lower(${categories.slug}) = ${categoriaSlug}`)
         .limit(1);
       if (catRows[0]) conditions.push(eq(products.categoryId, catRows[0].id));
     }
-    if (color) {
-      conditions.push(eq(products.color, color));
-    }
+    if (color) conditions.push(eq(products.color, color));
     if (minPrice !== undefined && minPrice !== "") {
       const n = parseFloat(minPrice);
       if (!Number.isNaN(n)) conditions.push(gte(products.price, String(n)));
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const productRows = await db
       .select()
       .from(products)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : sql`1 = 1`)
       .orderBy(desc(products.createdAt));
 
     if (productRows.length === 0) {
