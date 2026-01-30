@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import StoreFooter from "@/components/store/StoreFooter";
 
 export default function CarritoPage() {
   const { items, removeItem, updateQuantity, totalItems, totalAmount } = useCart();
