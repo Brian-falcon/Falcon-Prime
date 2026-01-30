@@ -54,33 +54,38 @@ export default function StoreHeader() {
           ))}
         </nav>
 
-        {/* Mobile: botón Carrito siempre visible + menú hamburguesa */}
-        <div className="flex md:hidden items-center gap-2">
-          <Link
-            href="/carrito"
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] -m-2 text-fp-black font-medium"
-            aria-label={`Carrito${totalItems > 0 ? `, ${totalItems} productos` : ""}`}
-          >
-            Carrito {totalItems > 0 ? `(${totalItems})` : ""}
-          </Link>
+        {/* Mobile: menú hamburguesa (izq) + Carrito (derecha), sin solapamiento para que el toque llegue al botón */}
+        <div className="flex md:hidden items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] -m-2 p-2 text-fp-black"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setMenuOpen((o) => !o);
+            }}
+            className="relative z-10 flex items-center justify-center w-11 h-11 rounded-lg text-fp-black touch-manipulation active:bg-gray-100"
+            style={{ touchAction: "manipulation" }}
             aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={menuOpen}
           >
             <span className="sr-only">{menuOpen ? "Cerrar" : "Menú"}</span>
             {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
           </button>
+          <Link
+            href="/carrito"
+            className="flex items-center justify-center min-h-[44px] px-2 py-2 text-fp-black font-medium rounded-lg touch-manipulation active:bg-gray-100"
+            style={{ touchAction: "manipulation" }}
+            aria-label={`Carrito${totalItems > 0 ? `, ${totalItems} productos` : ""}`}
+          >
+            Carrito{totalItems > 0 ? ` (${totalItems})` : ""}
+          </Link>
         </div>
       </div>
 
