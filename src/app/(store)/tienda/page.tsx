@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils";
 import AnnouncementBar from "@/components/store/AnnouncementBar";
 import StoreBenefits from "@/components/store/StoreBenefits";
 import StoreFooter from "@/components/store/StoreFooter";
+import StoreHeader from "@/components/store/StoreHeader";
 
 type Category = { id: string; name: string; slug: string };
 type Product = {

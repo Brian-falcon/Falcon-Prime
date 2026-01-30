@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/cart-context";
+import StoreHeader from "@/components/store/StoreHeader";
 import StoreFooter from "@/components/store/StoreFooter";
 
 type Product = {
