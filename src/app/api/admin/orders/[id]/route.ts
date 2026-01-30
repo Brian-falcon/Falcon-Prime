@@ -58,37 +58,55 @@ export async function PATCH(
       customerName: order.customerName,
       orderId: order.id,
     };
+    const statusesThatSendEmail = ["preparing", "shipped", "delivered"];
     let emailSent = false;
+    let emailError: string | null = null;
+
     if (newStatus === "preparing") {
       try {
         await sendOrderPreparingEmail(emailParams);
         emailSent = true;
-      } catch (emailErr) {
-        console.error("Error al enviar email en preparación:", emailErr);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error desconocido";
+        console.error("Error al enviar email en preparación:", msg);
+        emailError = msg;
       }
     } else if (newStatus === "shipped") {
       try {
         await sendOrderShippedEmail(emailParams);
         emailSent = true;
-      } catch (emailErr) {
-        console.error("Error al enviar email de despacho:", emailErr);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error desconocido";
+        console.error("Error al enviar email de despacho:", msg);
+        emailError = msg;
       }
     } else if (newStatus === "delivered") {
       try {
         await sendOrderDeliveredEmail(emailParams);
         emailSent = true;
-      } catch (emailErr) {
-        console.error("Error al enviar email entregado:", emailErr);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error desconocido";
+        console.error("Error al enviar email entregado:", msg);
+        emailError = msg;
       }
+    }
+
+    let message: string;
+    if (emailSent) {
+      message = "Estado actualizado y email enviado al cliente.";
+    } else if (emailError && statusesThatSendEmail.includes(newStatus)) {
+      message =
+        "Estado actualizado. No se pudo enviar el email al cliente. Revisá RESEND_API_KEY en Vercel y verificá un dominio en resend.com para enviar a cualquier correo.";
+    } else {
+      message = "Estado actualizado.";
     }
 
     return NextResponse.json({
       ok: true,
       status: newStatus,
-      message:
-        emailSent
-          ? "Estado actualizado y email enviado al cliente."
-          : "Estado actualizado.",
+      message,
+      emailSent,
+      emailError: emailError ?? undefined,
     });
   } catch (e) {
     console.error("Admin order PATCH error:", e);

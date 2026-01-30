@@ -91,15 +91,19 @@ El admin sube imágenes por archivo (PNG, JPG · máx 4 MB) a Cloudinary. Las UR
    - `CLOUDINARY_API_SECRET`
 4. Redeploy. Sin estas variables, "Añadir imágenes" en Nuevo/Editar producto fallará.
 
-## Email al cliente (Resend) – opcional
+## Email al cliente (Resend)
 
-Cuando en Admin → Pedidos cambiás el estado de un pedido a **Enviado**, se envía un email al correo del cliente avisando que su pedido fue despachado.
+Cuando en Admin → Pedidos cambiás el estado a **En preparación**, **Enviado** o **Entregado**, se envía un email al correo que el cliente usó en el checkout (Gmail, etc.).
 
 1. Creá una cuenta en [Resend](https://resend.com) → **API Keys** → Create API Key.
-2. En **Vercel** (o `.env.local`) agregá:
-   - `RESEND_API_KEY` = tu API key.
-   - `EMAIL_FROM` = remitente verificado en Resend, ej: `Falcon Prime <ventas@tudominio.com>` (o dejá el default `onboarding@resend.dev` para pruebas).
-3. Si no configurás `RESEND_API_KEY`, el estado se actualiza igual pero no se envía el email.
+2. En **Vercel** → Environment Variables agregá:
+   - `RESEND_API_KEY` = tu API key (obligatorio para que se envíen los correos).
+   - `EMAIL_FROM` = opcional. Si no lo ponés, se usa `onboarding@resend.dev`.
+3. **Para que le llegue el email al cliente (cualquier Gmail):** Con la cuenta gratis de Resend, si usás `onboarding@resend.dev` como remitente, los correos a veces solo llegan al email con el que te registraste en Resend. Para que le llegue a **cualquier** correo del cliente:
+   - En Resend → **Domains** → **Add Domain** → agregá tu dominio (ej. `tudominio.com`).
+   - Completá la verificación (registros DNS que te indica Resend).
+   - En Vercel agregá: `EMAIL_FROM=Falcon Prime <noreply@tudominio.com>` (usá un email de ese dominio).
+4. Si el admin ve el mensaje "No se pudo enviar el email al cliente", revisá que `RESEND_API_KEY` esté bien en Vercel y, si hace falta, verificá un dominio en Resend.
 
 ## Funcionalidades
 

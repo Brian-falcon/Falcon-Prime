@@ -41,7 +41,7 @@ export default function AdminPedidosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "ok" | "error" | "warning"; text: string } | null>(null);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -83,8 +83,12 @@ export default function AdminPedidosPage() {
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
       if (data.message) {
-        setMessage({ type: "ok", text: data.message });
-        setTimeout(() => setMessage(null), 4000);
+        const isWarning = data.message.includes("No se pudo enviar el email");
+        setMessage({
+          type: isWarning ? "warning" : "ok",
+          text: data.message,
+        });
+        setTimeout(() => setMessage(null), isWarning ? 8000 : 4000);
       }
     } catch {
       setMessage({ type: "error", text: "Error de conexión" });
@@ -134,7 +138,9 @@ export default function AdminPedidosPage() {
           className={`mb-4 px-4 py-3 rounded-lg text-sm ${
             message.type === "ok"
               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-              : "bg-red-50 text-red-800 border border-red-200"
+              : message.type === "warning"
+                ? "bg-amber-50 text-amber-800 border border-amber-200"
+                : "bg-red-50 text-red-800 border border-red-200"
           }`}
           role="alert"
         >
