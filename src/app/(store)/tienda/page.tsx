@@ -101,6 +101,21 @@ function TiendaContent() {
     new Set(products.flatMap((p) => p.sizes.map((s) => s.size)))
   ).filter(Boolean).sort();
 
+  type SortOption = "relevance" | "price-asc" | "price-desc" | "name";
+  const [sortBy, setSortBy] = useState<SortOption>("relevance");
+  const sortedProducts = useMemo(() => {
+    const list = [...products];
+    if (sortBy === "price-asc") list.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    else if (sortBy === "price-desc") list.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    else if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [products, sortBy]);
+
+  const categoryPills = [
+    { slug: "", label: "Todos" },
+    ...categories.map((c) => ({ slug: c.slug, label: c.name })),
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <AnnouncementBar />
@@ -123,6 +138,29 @@ function TiendaContent() {
                 ? "No hay productos con esos filtros."
                 : `${products.length} ${products.length === 1 ? "producto" : "productos"}`}
             </p>
+          )}
+          {/* Banner de confianza */}
+          <div className="mt-4 py-3 px-4 bg-[#fafafa] border border-gray-100 rounded-lg text-center text-sm text-fp-gray">
+            Envío a todo el país · Devoluciones en 30 días · Atención al cliente
+          </div>
+          {/* Píldoras de categoría */}
+          {categories.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {categoryPills.map(({ slug, label }) => (
+                <button
+                  key={slug || "all"}
+                  type="button"
+                  onClick={() => setFilters((f) => ({ ...f, categoria: slug }))}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    filters.categoria === slug
+                      ? "bg-fp-black text-white"
+                      : "bg-white border border-gray-200 text-fp-gray hover:border-fp-black hover:text-fp-black"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -217,8 +255,27 @@ function TiendaContent() {
             ) : products.length === 0 ? (
               <p className="text-fp-gray">No hay productos con esos filtros.</p>
             ) : (
-              <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {products.map((p) => (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                  <p className="text-sm text-fp-gray">
+                    Mostrando {sortedProducts.length} {sortedProducts.length === 1 ? "producto" : "productos"}
+                  </p>
+                  <label className="flex items-center gap-2 text-sm">
+                    <span className="text-fp-gray">Ordenar por:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      className="border border-gray-200 px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-fp-black text-fp-black bg-white"
+                    >
+                      <option value="relevance">Relevancia</option>
+                      <option value="price-asc">Precio: menor a mayor</option>
+                      <option value="price-desc">Precio: mayor a menor</option>
+                      <option value="name">Nombre A–Z</option>
+                    </select>
+                  </label>
+                </div>
+                <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {sortedProducts.map((p) => (
                   <li key={p.id}>
                     <Link
                       href={`/tienda/${p.slug}`}
@@ -247,6 +304,24 @@ function TiendaContent() {
                   </li>
                 ))}
               </ul>
+              {/* Línea de confianza al final del listado */}
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-sm">
+                  <div>
+                    <p className="font-medium text-fp-black mb-0.5">Envío a todo el país</p>
+                    <p className="text-fp-gray">Despacho en 24-48 hs hábiles</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-fp-black mb-0.5">Devoluciones gratis</p>
+                    <p className="text-fp-gray">30 días para cambiar o devolver</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-fp-black mb-0.5">¿Necesitás ayuda?</p>
+                    <p className="text-fp-gray">Escribinos y te respondemos a la brevedad</p>
+                  </div>
+                </div>
+              </div>
+              </>
             )}
           </div>
         </div>

@@ -36,6 +36,7 @@ export default function AdminHeader() {
   const links = [
     { href: "/admin", label: "Inicio" },
     { href: "/admin/productos", label: "Productos" },
+    { href: "/admin/pedidos", label: "Pedidos" },
     { href: "/", label: "Ver tienda", external: true },
   ];
 
