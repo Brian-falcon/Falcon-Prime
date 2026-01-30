@@ -2,8 +2,9 @@
 
 /**
  * Header del panel admin: menú hamburguesa en móvil para poder acceder a Productos y acciones.
+ * El menú se posiciona justo debajo del header.
  */
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +33,19 @@ function LogoutButton() {
 
 export default function AdminHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuTopPx, setMenuTopPx] = useState(56);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen || !headerRef.current) return;
+    const setTop = () => {
+      const bottom = headerRef.current?.getBoundingClientRect().bottom;
+      if (typeof bottom === "number") setMenuTopPx(bottom);
+    };
+    setTop();
+    window.addEventListener("resize", setTop);
+    return () => window.removeEventListener("resize", setTop);
+  }, [menuOpen]);
 
   const links = [
     { href: "/admin", label: "Inicio" },
@@ -41,7 +55,7 @@ export default function AdminHeader() {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header ref={headerRef} className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 min-h-[56px]">
           <Link href="/admin" className="font-semibold text-fp-black shrink-0">
@@ -87,15 +101,19 @@ export default function AdminHeader() {
         </div>
       </div>
 
-      {/* Menú móvil */}
+      {/* Menú móvil: se posiciona debajo del header */}
       {menuOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            style={{ top: 0 }}
             onClick={() => setMenuOpen(false)}
             aria-hidden
           />
-          <nav className="fixed top-14 right-0 bottom-0 left-0 bg-white z-50 md:hidden overflow-y-auto">
+          <nav
+            className="fixed right-0 bottom-0 left-0 bg-white z-50 md:hidden overflow-y-auto"
+            style={{ top: menuTopPx }}
+          >
             <ul className="max-w-7xl mx-auto px-4 py-6 space-y-1">
               {links.map(({ href, label, external }) => (
                 <li key={href}>

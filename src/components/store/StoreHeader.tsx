@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 
 /**
  * Header de la tienda: menú hamburguesa en móvil con Carrito siempre visible.
+ * El menú se posiciona justo debajo del header (o debajo de la barra de anuncio + header).
  */
 export default function StoreHeader() {
   const { totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuTopPx, setMenuTopPx] = useState(56);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen || !headerRef.current) return;
+    const setTop = () => {
+      const bottom = headerRef.current?.getBoundingClientRect().bottom;
+      if (typeof bottom === "number") setMenuTopPx(bottom);
+    };
+    setTop();
+    window.addEventListener("resize", setTop);
+    return () => window.removeEventListener("resize", setTop);
+  }, [menuOpen]);
 
   const navLinks = [
     { href: "/tienda", label: "Tienda" },
@@ -20,7 +34,7 @@ export default function StoreHeader() {
   ];
 
   return (
-    <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
+    <header ref={headerRef} className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
       <div className="container-fp flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
         <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-fp-black shrink-0">
           FALCON PRIME
@@ -70,16 +84,18 @@ export default function StoreHeader() {
         </div>
       </div>
 
-      {/* Overlay y menú móvil */}
+      {/* Overlay y menú móvil: se posicionan debajo del header (o barra de anuncio + header) */}
       {menuOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            style={{ top: 0 }}
             onClick={() => setMenuOpen(false)}
             aria-hidden
           />
           <nav
-            className="fixed top-14 sm:top-16 right-0 bottom-0 left-0 bg-white z-50 md:hidden overflow-y-auto"
+            className="fixed right-0 bottom-0 left-0 bg-white z-50 md:hidden overflow-y-auto"
+            style={{ top: menuTopPx }}
             aria-label="Menú principal"
           >
             <ul className="container-fp py-6 space-y-1">

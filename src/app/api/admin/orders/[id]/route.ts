@@ -95,8 +95,13 @@ export async function PATCH(
     if (emailSent) {
       message = "Estado actualizado y email enviado al cliente.";
     } else if (emailError && statusesThatSendEmail.includes(newStatus)) {
-      message =
-        "Estado actualizado. No se pudo enviar el email al cliente. Revisá RESEND_API_KEY en Vercel y verificá un dominio en resend.com para enviar a cualquier correo.";
+      const hint =
+        emailError.includes("RESEND_API_KEY") || emailError.includes("configurado")
+          ? " Agregá RESEND_API_KEY en Vercel (Settings → Environment Variables) y hacé Redeploy."
+          : emailError.toLowerCase().includes("domain") || emailError.toLowerCase().includes("dominio")
+            ? " Para enviar a cualquier correo, verificá un dominio en resend.com (Domains → Add Domain)."
+            : "";
+      message = `Estado actualizado. No se pudo enviar el email: ${emailError}.${hint}`;
     } else {
       message = "Estado actualizado.";
     }
