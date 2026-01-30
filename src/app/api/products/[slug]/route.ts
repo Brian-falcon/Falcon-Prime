@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productImages, productSizes, categories } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,10 +15,14 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const slugNorm = (slug ?? "").trim().toLowerCase();
+  if (!slugNorm) {
+    return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+  }
   const [p] = await db
     .select()
     .from(products)
-    .where(eq(products.slug, slug))
+    .where(sql`lower(${products.slug}) = ${slugNorm}`)
     .limit(1);
   if (!p) {
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });

@@ -11,9 +11,14 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const adminId = await getAdminSession();
+  let adminId: string | null = null;
+  try {
+    adminId = await getAdminSession();
+  } catch {
+    // Si falla la DB o la sesión, mostramos children (p. ej. login) para que el formulario siempre aparezca
+  }
 
-  // Sin sesión solo mostramos la página (login); el middleware ya redirige el resto a /admin/login
+  // Sin sesión mostramos la página actual (login u otra); el middleware redirige rutas protegidas a /admin/login
   if (!adminId) {
     return <>{children}</>;
   }
