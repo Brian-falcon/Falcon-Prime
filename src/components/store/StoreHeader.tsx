@@ -1,29 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 
 /**
- * Header de la tienda: menú hamburguesa en móvil con Carrito siempre visible.
- * El menú se posiciona justo debajo del header (o debajo de la barra de anuncio + header).
+ * Header de la tienda. En desktop: navegación completa. En móvil: solo Tienda y Carrito (sin hamburguesa).
  */
 export default function StoreHeader() {
   const { totalItems } = useCart();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuTopPx, setMenuTopPx] = useState(56);
-  const headerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen || !headerRef.current) return;
-    const setTop = () => {
-      const bottom = headerRef.current?.getBoundingClientRect().bottom;
-      if (typeof bottom === "number") setMenuTopPx(bottom);
-    };
-    setTop();
-    window.addEventListener("resize", setTop);
-    return () => window.removeEventListener("resize", setTop);
-  }, [menuOpen]);
 
   const navLinks = [
     { href: "/tienda", label: "Tienda" },
@@ -34,19 +18,18 @@ export default function StoreHeader() {
   ];
 
   return (
-    <header ref={headerRef} className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
+    <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
       <div className="container-fp flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
         <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-fp-black shrink-0">
           FALCON PRIME
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop: navegación completa */}
         <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm text-fp-gray">
           {navLinks.map(({ href, label, highlight }) => (
             <Link
               key={href + label}
               href={href}
-              onClick={() => setMenuOpen(false)}
               className={highlight ? "text-fp-black font-medium hover:underline" : "hover:text-fp-black"}
             >
               {label}
@@ -54,71 +37,21 @@ export default function StoreHeader() {
           ))}
         </nav>
 
-        {/* Mobile: menú hamburguesa (izq) + Carrito (derecha), sin solapamiento para que el toque llegue al botón */}
-        <div className="flex md:hidden items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              setMenuOpen((o) => !o);
-            }}
-            className="relative z-10 flex items-center justify-center w-11 h-11 rounded-lg text-fp-black touch-manipulation active:bg-gray-100"
-            style={{ touchAction: "manipulation" }}
-            aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={menuOpen}
-          >
-            <span className="sr-only">{menuOpen ? "Cerrar" : "Menú"}</span>
-            {menuOpen ? (
-              <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+        {/* Móvil: solo Tienda y Carrito, sin hamburguesa */}
+        <nav className="flex md:hidden items-center gap-4 text-sm shrink-0">
+          <Link href="/tienda" className="text-fp-gray hover:text-fp-black font-medium py-2">
+            Tienda
+          </Link>
           <Link
             href="/carrito"
-            className="flex items-center justify-center min-h-[44px] px-2 py-2 text-fp-black font-medium rounded-lg touch-manipulation active:bg-gray-100"
+            className="text-fp-black font-medium py-2 touch-manipulation"
             style={{ touchAction: "manipulation" }}
-            aria-label={`Carrito${totalItems > 0 ? `, ${totalItems} productos` : ""}`}
+            aria-label={totalItems > 0 ? `Carrito, ${totalItems} productos` : "Carrito"}
           >
             Carrito{totalItems > 0 ? ` (${totalItems})` : ""}
           </Link>
-        </div>
+        </nav>
       </div>
-
-      {/* Overlay y menú móvil: se posicionan debajo del header (o barra de anuncio + header) */}
-      {menuOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
-            style={{ top: 0 }}
-            onClick={() => setMenuOpen(false)}
-            aria-hidden
-          />
-          <nav
-            className="fixed right-0 bottom-0 left-0 bg-white z-50 md:hidden overflow-y-auto"
-            style={{ top: menuTopPx }}
-            aria-label="Menú principal"
-          >
-            <ul className="container-fp py-6 space-y-1">
-              {navLinks.map(({ href, label, highlight }) => (
-                <li key={href + label}>
-                  <Link
-                    href={href}
-                    onClick={() => setMenuOpen(false)}
-                    className={`block py-3 px-4 text-base rounded-lg active:bg-gray-100 ${highlight ? "text-fp-black font-semibold bg-fp-light" : "text-fp-gray hover:bg-gray-50 hover:text-fp-black"}`}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </>
-      )}
     </header>
   );
 }
