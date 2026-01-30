@@ -1,6 +1,6 @@
 /**
  * PATCH /api/admin/orders/[id] - Actualizar estado del pedido.
- * Si el nuevo estado es "shipped", se envía un email al cliente.
+ * En "preparing", "shipped" y "delivered" se envía un email al cliente (al correo que usó en la compra, ej. Gmail).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
@@ -9,7 +9,11 @@ import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/order-status";
-import { sendOrderShippedEmail } from "@/lib/email";
+import {
+  sendOrderPreparingEmail,
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+} from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -49,19 +53,32 @@ export async function PATCH(
     const newStatus = parsed.data.status as OrderStatus;
     await db.update(orders).set({ status: newStatus }).where(eq(orders.id, id));
 
-    if (newStatus === "shipped") {
+    const emailParams = {
+      to: order.customerEmail,
+      customerName: order.customerName,
+      orderId: order.id,
+    };
+    let emailSent = false;
+    if (newStatus === "preparing") {
       try {
-        await sendOrderShippedEmail({
-          to: order.customerEmail,
-          customerName: order.customerName,
-          orderId: order.id,
-        });
+        await sendOrderPreparingEmail(emailParams);
+        emailSent = true;
+      } catch (emailErr) {
+        console.error("Error al enviar email en preparación:", emailErr);
+      }
+    } else if (newStatus === "shipped") {
+      try {
+        await sendOrderShippedEmail(emailParams);
+        emailSent = true;
       } catch (emailErr) {
         console.error("Error al enviar email de despacho:", emailErr);
-        return NextResponse.json({
-          ok: true,
-          message: "Estado actualizado. No se pudo enviar el email al cliente (revisá RESEND_API_KEY).",
-        });
+      }
+    } else if (newStatus === "delivered") {
+      try {
+        await sendOrderDeliveredEmail(emailParams);
+        emailSent = true;
+      } catch (emailErr) {
+        console.error("Error al enviar email entregado:", emailErr);
       }
     }
 
@@ -69,7 +86,7 @@ export async function PATCH(
       ok: true,
       status: newStatus,
       message:
-        newStatus === "shipped"
+        emailSent
           ? "Estado actualizado y email enviado al cliente."
           : "Estado actualizado.",
     });
