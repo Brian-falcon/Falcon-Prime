@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import StoreHeader from "@/components/store/StoreHeader";
 import StoreFooter from "@/components/store/StoreFooter";
 
 export default function CheckoutPage() {
@@ -66,16 +67,7 @@ export default function CheckoutPage() {
   if (items.length === 0 && !loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="border-b border-gray-200">
-          <div className="container-fp flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
-            <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-fp-black">
-              FALCON PRIME
-            </Link>
-            <Link href="/carrito" className="text-sm text-fp-gray hover:text-fp-black">
-              Carrito
-            </Link>
-          </div>
-        </header>
+        <StoreHeader />
         <main className="flex-1 container-fp py-16 px-4 text-center">
           <h1 className="text-xl sm:text-2xl font-light text-fp-black mb-4">Checkout</h1>
           <p className="text-fp-gray mb-6">Tu carrito está vacío.</p>
@@ -93,16 +85,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen flex flex-col pb-24 sm:pb-0">
-      <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="container-fp flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
-          <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-fp-black">
-            FALCON PRIME
-          </Link>
-          <Link href="/carrito" className="text-sm text-fp-gray hover:text-fp-black">
-            ← Carrito
-          </Link>
-        </div>
-      </header>
+      <StoreHeader />
 
       <main className="flex-1 container-fp py-6 sm:py-8 px-4 sm:px-6">
         <h1 className="text-xl sm:text-2xl font-light text-fp-black mb-6">Finalizar compra</h1>

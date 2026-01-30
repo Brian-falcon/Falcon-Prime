@@ -103,21 +103,7 @@ function TiendaContent() {
   return (
     <div className="min-h-screen flex flex-col">
       <AnnouncementBar />
-      <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="container-fp flex items-center justify-between h-16">
-          <Link href="/" className="text-xl font-semibold tracking-tight text-fp-black">
-            FALCON PRIME
-          </Link>
-          <nav className="hidden md:flex gap-8 text-sm text-fp-gray hover:[&>a]:text-fp-black">
-            <Link href="/tienda">Tienda</Link>
-            <Link href="/tienda?categoria=ropa">Ropa</Link>
-            <Link href="/tienda?categoria=calzado">Calzado</Link>
-            <Link href="/tienda?categoria=accesorios">Accesorios</Link>
-            <Link href="/carrito">Carrito</Link>
-          </nav>
-        </div>
-      </header>
-
+      <StoreHeader />
       <StoreBenefits />
 
       <main className="flex-1 container-fp py-8 md:py-10">

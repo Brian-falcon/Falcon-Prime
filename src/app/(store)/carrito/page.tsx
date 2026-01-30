@@ -2,11 +2,12 @@
 
 /**
  * Página del carrito: listar ítems, modificar cantidad, eliminar, ver total.
- * Layout responsive para móvil y desktop.
+ * Layout responsive para móvil y desktop. Usa StoreHeader para acceso al carrito desde móvil.
  */
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import StoreHeader from "@/components/store/StoreHeader";
 import StoreFooter from "@/components/store/StoreFooter";
 
 export default function CarritoPage() {
@@ -14,23 +15,9 @@ export default function CarritoPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="container-fp flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6">
-          <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-fp-black">
-            FALCON PRIME
-          </Link>
-          <nav className="flex gap-4 sm:gap-8 text-sm text-fp-gray">
-            <Link href="/tienda" className="hover:text-fp-black">
-              Tienda
-            </Link>
-            <Link href="/carrito" className="text-fp-black font-medium">
-              Carrito {totalItems > 0 ? `(${totalItems})` : ""}
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <StoreHeader />
 
-      <main className="flex-1 container-fp py-6 sm:py-8 px-4 sm:px-6">
+      <main className="flex-1 container-fp py-6 sm:py-8 px-4 sm:px-6 pb-24 sm:pb-8">
         <h1 className="text-xl sm:text-2xl font-light text-fp-black mb-6">Carrito</h1>
 
         {items.length === 0 ? (
@@ -124,18 +111,28 @@ export default function CarritoPage() {
                 <div className="flex flex-col-reverse sm:flex-row gap-3 order-1 sm:order-2 w-full sm:w-auto">
                   <Link
                     href="/tienda"
-                    className="w-full sm:w-auto text-center border border-gray-300 px-4 py-3 sm:py-2 text-sm text-fp-black hover:border-fp-black"
+                    className="w-full sm:w-auto text-center border border-gray-300 px-4 py-3.5 sm:py-2 text-base sm:text-sm text-fp-black hover:border-fp-black min-h-[44px] flex items-center justify-center"
                   >
                     Seguir comprando
                   </Link>
                   <Link
                     href="/checkout"
-                    className="w-full sm:w-auto text-center bg-fp-black text-white px-6 py-3 sm:py-2 text-sm font-medium hover:bg-gray-800"
+                    className="w-full sm:w-auto text-center bg-fp-black text-white px-6 py-3.5 sm:py-2 text-base sm:text-sm font-medium hover:bg-gray-800 min-h-[48px] flex items-center justify-center"
                   >
                     Finalizar compra
                   </Link>
                 </div>
               </div>
+            </div>
+
+            {/* Botón fijo en móvil para que "Finalizar compra" siempre sea accesible */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40">
+              <Link
+                href="/checkout"
+                className="block w-full bg-fp-black text-white py-3.5 text-center text-base font-medium hover:bg-gray-800"
+              >
+                Finalizar compra
+              </Link>
             </div>
           </>
         )}

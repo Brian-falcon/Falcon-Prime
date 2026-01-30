@@ -228,7 +228,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
           type="text"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+          className="w-full border border-gray-300 px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
           required
         />
       </div>
@@ -239,11 +239,11 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
         <textarea
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[100px]"
+          className="w-full border border-gray-300 px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[100px]"
           rows={4}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-fp-black mb-1">
             Precio *
@@ -254,7 +254,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
             min="0"
             value={form.price}
             onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+            className="w-full border border-gray-300 px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
             required
           />
         </div>
@@ -265,7 +265,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
           <select
             value={form.categoryId}
             onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-            className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+            className="w-full border border-gray-300 px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
             required
           >
             <option value="">Seleccionar</option>
@@ -285,7 +285,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
           type="text"
           value={form.color}
           onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-          className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+          className="w-full border border-gray-300 px-3 py-3 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
           placeholder="Ej: Negro, Blanco"
         />
       </div>
@@ -321,7 +321,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="text-sm text-fp-black hover:underline disabled:opacity-50"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center px-3 py-2 text-sm text-fp-black hover:underline disabled:opacity-50 -m-1"
           >
             {uploading ? "Subiendo…" : "+ Añadir imágenes"}
           </button>
@@ -359,7 +359,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
                   type="button"
                   onClick={() => moveImage(i, i - 1)}
                   disabled={i === 0}
-                  className="p-1.5 border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100 active:bg-gray-200"
                   title="Mover atrás"
                 >
                   ←
@@ -368,7 +368,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
                   type="button"
                   onClick={() => moveImage(i, i + 1)}
                   disabled={i === form.images.length - 1}
-                  className="p-1.5 border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100 active:bg-gray-200"
                   title="Mover adelante"
                 >
                   →
@@ -376,7 +376,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
                 <button
                   type="button"
                   onClick={() => removeImage(i)}
-                  className="p-1.5 text-red-600 text-sm hover:bg-red-50"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-600 text-sm hover:bg-red-50 active:bg-red-100"
                   title="Quitar"
                 >
                   ✕
@@ -395,19 +395,19 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
           <button
             type="button"
             onClick={addSize}
-            className="text-sm text-fp-black hover:underline"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center px-3 py-2 text-sm text-fp-black hover:underline -m-1"
           >
             + Añadir talle
           </button>
         </div>
         {form.sizes.map((s, i) => (
-          <div key={i} className="flex gap-2 mb-2">
+          <div key={i} className="flex flex-wrap gap-2 mb-2 items-center">
             <input
               type="text"
               value={s.size}
               onChange={(e) => updateSize(i, "size", e.target.value)}
               placeholder="S, M, L, 42..."
-              className="w-24 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+              className="min-w-[4rem] w-24 border border-gray-300 px-3 py-2.5 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
             />
             <input
               type="number"
@@ -415,13 +415,13 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
               value={s.stock}
               onChange={(e) => updateSize(i, "stock", e.target.value)}
               placeholder="Stock"
-              className="w-20 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+              className="min-w-[4rem] w-20 border border-gray-300 px-3 py-2.5 sm:py-2 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-fp-black min-h-[44px] sm:min-h-0"
             />
             {form.sizes.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeSize(i)}
-                className="text-red-600 text-sm hover:underline"
+                className="min-h-[44px] px-3 flex items-center text-red-600 text-sm hover:underline"
               >
                 Quitar
               </button>
@@ -433,7 +433,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
         <button
           type="submit"
           disabled={saving}
-          className="bg-fp-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-[48px] px-6 py-3 sm:py-2 text-base sm:text-sm font-medium bg-fp-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           {saving ? "Guardando…" : productId ? "Guardar cambios" : "Crear producto"}
         </button>

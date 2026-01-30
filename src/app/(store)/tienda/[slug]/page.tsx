@@ -103,19 +103,8 @@ export default function ProductoPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
-        <div className="container-fp flex items-center justify-between h-16">
-          <Link href="/" className="text-xl font-semibold tracking-tight text-fp-black">
-            FALCON PRIME
-          </Link>
-          <nav className="hidden md:flex gap-8 text-sm text-fp-gray hover:[&>a]:text-fp-black">
-            <Link href="/tienda">Tienda</Link>
-            <Link href="/carrito">Carrito</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="flex-1 container-fp py-8">
+      <StoreHeader />
+      <main className="flex-1 container-fp py-6 sm:py-8 px-4 sm:px-6">
         <div className="mb-4 text-sm text-fp-gray">
           <Link href="/tienda" className="hover:text-fp-black">Tienda</Link>
           <span className="mx-2">/</span>
