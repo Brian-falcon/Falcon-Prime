@@ -24,7 +24,7 @@ const createProductSchema = z.object({
   price: z.number().positive(),
   categoryId: z.string().min(1),
   color: z.string().optional(),
-  images: z.array(z.object({ url: z.string().url(), alt: z.string().optional() })).default([]),
+  images: z.array(z.object({ url: z.string().min(1), alt: z.string().optional() })).default([]),
   sizes: z.array(z.object({ size: z.string().min(1), stock: z.number().int().min(0) })).default([]),
 });
 
@@ -72,7 +72,9 @@ export async function GET() {
       price: String(p.price ?? ""),
       isActive: p.isActive,
       category: catMap[p.categoryId] ?? { id: p.categoryId, name: "", slug: "" },
-      images: (imagesByProduct[p.id] ?? []).map((img) => ({ id: img.id, url: img.url, alt: img.alt, sortOrder: img.sortOrder })),
+      images: (imagesByProduct[p.id] ?? [])
+        .map((img) => ({ id: img.id, url: img.url, alt: img.alt, sortOrder: img.sortOrder }))
+        .sort((a, b) => a.sortOrder - b.sortOrder),
       sizes: (sizesByProduct[p.id] ?? []).map((s) => ({ id: s.id, size: s.size, stock: s.stock })),
     }));
     return NextResponse.json(list, {
@@ -146,14 +148,22 @@ export async function POST(request: NextRequest) {
         stock: s.stock,
       });
     }
-    const product = await db.query.products.findFirst({
-      where: eq(products.id, productId),
-      with: {
-        category: { columns: { id: true, name: true, slug: true } },
-        images: true,
-        sizes: true,
-      },
-    });
+    // Obtener el producto creado con JOIN explícito
+    const [p] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    if (!p) {
+      return NextResponse.json({ error: "Producto creado pero no se pudo recuperar" }, { status: 500 });
+    }
+    const [cat] = await db.select().from(categories).where(eq(categories.id, p.categoryId)).limit(1);
+    const imgs = await db.select().from(productImages).where(eq(productImages.productId, productId));
+    const szs = await db.select().from(productSizes).where(eq(productSizes.productId, productId));
+    const sortedImages = [...imgs].sort((a, b) => a.sortOrder - b.sortOrder);
+    const product = {
+      ...p,
+      price: String(p.price ?? ""),
+      category: cat ?? { id: p.categoryId, name: "", slug: "" },
+      images: sortedImages,
+      sizes: szs,
+    };
     return NextResponse.json(product);
   } catch (e) {
     console.error("Create product error:", e);

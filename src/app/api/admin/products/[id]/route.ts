@@ -43,13 +43,17 @@ export async function GET(
   const [cat] = await db.select().from(categories).where(eq(categories.id, p.categoryId)).limit(1);
   const imgs = await db.select().from(productImages).where(eq(productImages.productId, id));
   const szs = await db.select().from(productSizes).where(eq(productSizes.productId, id));
+  const sortedImages = [...imgs].sort((a, b) => a.sortOrder - b.sortOrder);
   const product = {
     ...p,
+    price: String(p.price ?? ""),
     category: cat ?? { id: p.categoryId, name: "", slug: "" },
-    images: imgs,
+    images: sortedImages,
     sizes: szs,
   };
-  return NextResponse.json(product);
+  return NextResponse.json(product, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }
 
 export async function PUT(
@@ -117,13 +121,17 @@ export async function PUT(
       const [cat] = await db.select().from(categories).where(eq(categories.id, p.categoryId)).limit(1);
       const imgs = await db.select().from(productImages).where(eq(productImages.productId, id));
       const szs = await db.select().from(productSizes).where(eq(productSizes.productId, id));
+      const sortedImages = [...imgs].sort((a, b) => a.sortOrder - b.sortOrder);
       const product = {
         ...p,
+        price: String(p.price ?? ""),
         category: cat ?? { id: p.categoryId, name: "", slug: "" },
-        images: imgs,
+        images: sortedImages,
         sizes: szs,
       };
-      return NextResponse.json(product);
+      return NextResponse.json(product, {
+        headers: { "Cache-Control": "no-store, max-age=0" },
+      });
     } catch (_fetchErr) {
       return NextResponse.json({ ok: true, productUpdated: true });
     }

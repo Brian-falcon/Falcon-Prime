@@ -79,13 +79,17 @@ Falcon-Prime/
 
 4. **Cargar productos:** Si la base está vacía: `npm run seed` y luego `npm run seed-products`.
 
-## Imágenes de productos (Vercel Blob)
+## Imágenes de productos (Cloudinary)
 
-El admin sube imágenes por archivo (PNG, JPG · máx 4 MB) en lugar de URL.
+El admin sube imágenes por archivo (PNG, JPG · máx 4 MB) a Cloudinary. Las URLs se guardan en `product_images`.
 
-1. En **Vercel** → tu proyecto → **Storage** → **Create Database** → **Blob**.
-2. En **Environment Variables** agregá **`BLOB_READ_WRITE_TOKEN`** (Vercel lo genera al crear el Blob).
-3. Redeploy. Sin este token, "Añadir imágenes" en Nuevo/Editar producto fallará.
+1. Creá una cuenta en [Cloudinary](https://cloudinary.com) → **Dashboard**.
+2. Copiá **Cloud name**, **API Key** y **API Secret**.
+3. En **Vercel** → Environment Variables agregá:
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+4. Redeploy. Sin estas variables, "Añadir imágenes" en Nuevo/Editar producto fallará.
 
 ## Funcionalidades
 

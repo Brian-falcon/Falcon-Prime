@@ -2,8 +2,8 @@
 
 /**
  * Formulario compartido para crear y editar productos (admin).
- * Imágenes por archivo (PNG, JPG, JPEG) → upload a Vercel Blob.
- * Primera imagen = principal; resto = galería.
+ * Imágenes por archivo (PNG, JPG, JPEG) → Cloudinary → product_images.
+ * Primera imagen = principal (sort_order 0); resto = galería.
  */
 import { useState, useEffect, useRef } from "react";
 
@@ -307,7 +307,7 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="block text-sm font-medium text-fp-black">
-            Imágenes (PNG, JPG · máx 4 MB)
+            Imágenes (PNG, JPG · máx 4 MB · Cloudinary)
           </label>
           <input
             ref={fileInputRef}
