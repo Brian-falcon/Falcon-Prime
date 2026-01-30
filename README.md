@@ -91,10 +91,20 @@ El admin sube imágenes por archivo (PNG, JPG · máx 4 MB) a Cloudinary. Las UR
    - `CLOUDINARY_API_SECRET`
 4. Redeploy. Sin estas variables, "Añadir imágenes" en Nuevo/Editar producto fallará.
 
+## Email al cliente (Resend) – opcional
+
+Cuando en Admin → Pedidos cambiás el estado de un pedido a **Enviado**, se envía un email al correo del cliente avisando que su pedido fue despachado.
+
+1. Creá una cuenta en [Resend](https://resend.com) → **API Keys** → Create API Key.
+2. En **Vercel** (o `.env.local`) agregá:
+   - `RESEND_API_KEY` = tu API key.
+   - `EMAIL_FROM` = remitente verificado en Resend, ej: `Falcon Prime <ventas@tudominio.com>` (o dejá el default `onboarding@resend.dev` para pruebas).
+3. Si no configurás `RESEND_API_KEY`, el estado se actualiza igual pero no se envía el email.
+
 ## Funcionalidades
 
 - **Tienda:** Home, catálogo con filtros (categoría, talle, color, precio), ficha de producto, carrito, checkout.
-- **Admin:** Login, CRUD de productos, múltiples imágenes, categorías, talles y stock. El stock se descuenta al confirmar pedido.
+- **Admin:** Login, CRUD de productos, múltiples imágenes, categorías, talles y stock. El stock se descuenta al confirmar pedido. Gestión de pedidos: cambiar estado (Pendiente → En preparación → Enviado → Entregado); al marcar **Enviado** se envía un email al cliente (si está configurado Resend).
 
 ## Licencia
 

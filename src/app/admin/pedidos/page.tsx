@@ -2,10 +2,13 @@
 
 /**
  * Listado de pedidos en el panel de administración.
+ * Permite cambiar el estado (Pendiente → En preparación → Enviado → Entregado).
+ * Al marcar como "Enviado" se envía un email al cliente.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
+import { getOrderStatusLabel, ORDER_STATUSES, type OrderStatus } from "@/lib/order-status";
 
 type Order = {
   id: string;
@@ -37,27 +40,58 @@ export default function AdminPedidosPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/orders", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? "Error al cargar pedidos");
+        setOrders([]);
+        return;
+      }
+      setOrders(Array.isArray(data) ? data : []);
+    } catch {
+      setError("Error de conexión");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/admin/orders", { cache: "no-store" });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(data?.error ?? "Error al cargar pedidos");
-          setOrders([]);
-          return;
-        }
-        setOrders(Array.isArray(data) ? data : []);
-      } catch {
-        setError("Error de conexión");
-        setOrders([]);
-      } finally {
-        setLoading(false);
+    loadOrders();
+  }, [loadOrders]);
+
+  async function handleStatusChange(orderId: string, newStatus: OrderStatus) {
+    setUpdatingId(orderId);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "error", text: data?.error ?? "Error al actualizar" });
+        return;
       }
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+      );
+      if (data.message) {
+        setMessage({ type: "ok", text: data.message });
+        setTimeout(() => setMessage(null), 4000);
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error de conexión" });
+    } finally {
+      setUpdatingId(null);
     }
-    load();
-  }, []);
+  }
 
   if (loading) {
     return (
@@ -95,6 +129,19 @@ export default function AdminPedidosPage() {
         </div>
       </div>
 
+      {message && (
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg text-sm ${
+            message.type === "ok"
+              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+              : "bg-red-50 text-red-800 border border-red-200"
+          }`}
+          role="alert"
+        >
+          {message.text}
+        </div>
+      )}
+
       {orders.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
           <p className="text-fp-gray">Aún no hay pedidos.</p>
@@ -115,20 +162,29 @@ export default function AdminPedidosPage() {
                   <p className="text-sm text-fp-gray truncate">{o.customerEmail}</p>
                   <p className="text-xs text-fp-gray mt-1">{formatDate(o.createdAt)}</p>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
                   <span className="text-sm text-fp-black font-medium">
                     {formatPrice(parseFloat(o.total), { currency: "ARS" })}
                   </span>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      o.status === "pending"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-gray-100 text-fp-gray"
-                    }`}
-                  >
-                    {o.status === "pending" ? "Pendiente" : o.status}
-                  </span>
                   <span className="text-xs text-fp-gray">{o.itemsCount} ítem{o.itemsCount !== 1 ? "s" : ""}</span>
+                  <label className="flex items-center gap-2 text-sm">
+                    <span className="text-fp-gray whitespace-nowrap">Estado:</span>
+                    <select
+                      value={ORDER_STATUSES.includes(o.status as OrderStatus) ? o.status : "pending"}
+                      onChange={(e) => handleStatusChange(o.id, e.target.value as OrderStatus)}
+                      disabled={updatingId === o.id}
+                      className="border border-gray-200 rounded px-3 py-1.5 text-fp-black bg-white min-w-[140px] disabled:opacity-60"
+                    >
+                      {ORDER_STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {getOrderStatusLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                    {updatingId === o.id && (
+                      <span className="text-xs text-fp-gray">Actualizando…</span>
+                    )}
+                  </label>
                 </div>
               </div>
               <div className="px-4 sm:px-5 pb-4 sm:pb-5 border-t border-gray-100">

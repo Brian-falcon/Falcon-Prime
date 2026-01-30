@@ -8,6 +8,7 @@ import { products, orders } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 async function getStats() {
   const [productsRes, ordersRes, recentOrders] = await Promise.all([
@@ -218,10 +219,10 @@ export default async function AdminDashboardPage() {
                   </span>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      o.status === "pending" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-fp-gray"
+                      o.status === "pending" ? "bg-amber-100 text-amber-800" : o.status === "shipped" ? "bg-blue-100 text-blue-800" : o.status === "delivered" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-fp-gray"
                     }`}
                   >
-                    {o.status === "pending" ? "Pendiente" : o.status}
+                    {getOrderStatusLabel(o.status)}
                   </span>
                   <span className="text-xs text-fp-gray">{formatDate(o.createdAt)}</span>
                 </div>
