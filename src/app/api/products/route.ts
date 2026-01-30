@@ -85,12 +85,14 @@ export async function GET(request: NextRequest) {
       price: String(p.price ?? ""),
       color: p.color ?? null,
       category: catMap[p.categoryId] ?? { id: p.categoryId, name: "", slug: "" },
-      images: (imagesByProduct[p.id] ?? []).map((img) => ({
-        id: img.id,
-        url: img.url,
-        alt: img.alt,
-        sortOrder: img.sortOrder,
-      })),
+      images: (imagesByProduct[p.id] ?? [])
+        .map((img) => ({
+          id: img.id,
+          url: img.url,
+          alt: img.alt,
+          sortOrder: img.sortOrder,
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder),
       sizes: (sizesByProduct[p.id] ?? []).map((s) => ({ id: s.id, size: s.size, stock: s.stock })),
     }));
 

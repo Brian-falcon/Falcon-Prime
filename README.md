@@ -79,6 +79,14 @@ Falcon-Prime/
 
 4. **Cargar productos:** Si la base está vacía: `npm run seed` y luego `npm run seed-products`.
 
+## Imágenes de productos (Vercel Blob)
+
+El admin sube imágenes por archivo (PNG, JPG · máx 4 MB) en lugar de URL.
+
+1. En **Vercel** → tu proyecto → **Storage** → **Create Database** → **Blob**.
+2. En **Environment Variables** agregá **`BLOB_READ_WRITE_TOKEN`** (Vercel lo genera al crear el Blob).
+3. Redeploy. Sin este token, "Añadir imágenes" en Nuevo/Editar producto fallará.
+
 ## Funcionalidades
 
 - **Tienda:** Home, catálogo con filtros (categoría, talle, color, precio), ficha de producto, carrito, checkout.

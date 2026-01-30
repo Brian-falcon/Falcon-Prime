@@ -31,6 +31,7 @@ export default function ProductoPage() {
   const { addItem } = useCart();
 
   useEffect(() => {
+    setImageIndex(0);
     async function load() {
       try {
         const res = await fetch(`/api/products/${encodeURIComponent(slug)}`);
@@ -68,7 +69,7 @@ export default function ProductoPage() {
       price: parseFloat(product.price),
       size: selectedSize,
       quantity: 1,
-      imageUrl: product.images[0]?.url ?? null,
+      imageUrl: sortedImages[0]?.url ?? null,
     });
     alert("Agregado al carrito.");
   }
@@ -94,6 +95,10 @@ export default function ProductoPage() {
 
   const availableSizes = product.sizes.filter((s) => s.stock > 0);
   const totalStock = product.sizes.reduce((acc, s) => acc + s.stock, 0);
+  const sortedImages = [...(product.images || [])].sort(
+    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+  );
+  const mainImage = sortedImages[imageIndex] ?? sortedImages[0];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -121,12 +126,12 @@ export default function ProductoPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl">
-          <div className="space-y-2">
-            <div className="aspect-[3/4] bg-fp-light overflow-hidden">
-              {product.images[imageIndex] ? (
+          <div className="space-y-3">
+            <div className="aspect-[3/4] bg-fp-light overflow-hidden rounded-sm">
+              {mainImage ? (
                 <img
-                  src={product.images[imageIndex].url}
-                  alt={product.images[imageIndex].alt ?? product.name}
+                  src={mainImage.url}
+                  alt={mainImage.alt ?? product.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -135,15 +140,17 @@ export default function ProductoPage() {
                 </div>
               )}
             </div>
-            {product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {product.images.map((img, i) => (
+            {sortedImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {sortedImages.map((img, i) => (
                   <button
                     key={img.id}
                     type="button"
                     onClick={() => setImageIndex(i)}
-                    className={`shrink-0 w-16 h-20 bg-fp-light overflow-hidden border-2 ${
-                      i === imageIndex ? "border-fp-black" : "border-transparent"
+                    className={`shrink-0 w-16 h-20 rounded overflow-hidden border-2 transition-colors ${
+                      i === imageIndex
+                        ? "border-fp-black ring-1 ring-fp-black"
+                        : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
                     <img

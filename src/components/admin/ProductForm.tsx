@@ -2,9 +2,10 @@
 
 /**
  * Formulario compartido para crear y editar productos (admin).
- * Imágenes por URL; talles con stock.
+ * Imágenes por archivo (PNG, JPG, JPEG) → upload a Vercel Blob.
+ * Primera imagen = principal; resto = galería.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Category = { id: string; name: string; slug: string };
 
@@ -26,7 +27,7 @@ const defaultForm: ProductFormData = {
   categoryId: "",
   color: "",
   isActive: true,
-  images: [{ url: "", alt: "" }],
+  images: [],
   sizes: [{ size: "", stock: "0" }],
 };
 
@@ -40,7 +41,9 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
   const [form, setForm] = useState<ProductFormData>(defaultForm);
   const [loading, setLoading] = useState(!!productId);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function loadCategories() {
@@ -57,73 +60,106 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
   useEffect(() => {
     if (!productId) return;
     async function loadProduct() {
-      const res = await fetch(`/api/admin/products/${productId}`);
-      if (!res.ok) {
-        setError("Producto no encontrado");
+      setError("");
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/admin/products/${productId}`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) setError("Sesión expirada. Volvé a iniciar sesión.");
+          else setError(data?.error ?? "Producto no encontrado");
+          setLoading(false);
+          return;
+        }
+        const p = await res.json();
+        setForm({
+          name: p.name ?? "",
+          description: p.description ?? "",
+          price: String(p.price ?? ""),
+          categoryId: p.categoryId ?? "",
+          color: p.color ?? "",
+          isActive: p.isActive ?? true,
+          images:
+            p.images?.length > 0
+              ? p.images.map((i: { url: string; alt: string | null }) => ({
+                  url: i.url,
+                  alt: i.alt ?? "",
+                }))
+              : [],
+          sizes:
+            p.sizes?.length > 0
+              ? p.sizes.map((s: { size: string; stock: number }) => ({
+                  size: s.size,
+                  stock: String(s.stock),
+                }))
+              : [{ size: "", stock: "0" }],
+        });
+        setError("");
+      } catch {
+        setError("Error al cargar el producto");
+      } finally {
         setLoading(false);
-        return;
       }
-      const p = await res.json();
-      setForm({
-        name: p.name ?? "",
-        description: p.description ?? "",
-        price: p.price ?? "",
-        categoryId: p.categoryId ?? "",
-        color: p.color ?? "",
-        isActive: p.isActive ?? true,
-        images:
-          p.images?.length > 0
-            ? p.images.map((i: { url: string; alt: string | null }) => ({
-                url: i.url,
-                alt: i.alt ?? "",
-              }))
-            : [{ url: "", alt: "" }],
-        sizes:
-          p.sizes?.length > 0
-            ? p.sizes.map((s: { size: string; stock: number }) => ({
-                size: s.size,
-                stock: String(s.stock),
-              }))
-            : [{ size: "", stock: "0" }],
-      });
-      setLoading(false);
     }
     loadProduct();
   }, [productId]);
 
-  function addImage() {
-    setForm((f) => ({ ...f, images: [...f.images, { url: "", alt: "" }] }));
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files?.length) return;
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) formData.append("files", files[i]);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? "Error al subir imágenes");
+        setUploading(false);
+        e.target.value = "";
+        return;
+      }
+      const urls: string[] = data.urls ?? [];
+      setForm((f) => ({
+        ...f,
+        images: [...f.images, ...urls.map((url) => ({ url, alt: "" }))],
+      }));
+    } catch {
+      setError("Error de conexión al subir");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   }
+
   function removeImage(i: number) {
+    setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
+  }
+  function updateImageAlt(i: number, alt: string) {
     setForm((f) => ({
       ...f,
-      images: f.images.filter((_, idx) => idx !== i),
+      images: f.images.map((img, idx) => (idx === i ? { ...img, alt } : img)),
     }));
   }
-  function updateImage(i: number, field: "url" | "alt", value: string) {
-    setForm((f) => ({
-      ...f,
-      images: f.images.map((img, idx) =>
-        idx === i ? { ...img, [field]: value } : img
-      ),
-    }));
+  function moveImage(from: number, to: number) {
+    if (to < 0 || to >= form.images.length) return;
+    const next = [...form.images];
+    const [removed] = next.splice(from, 1);
+    next.splice(to, 0, removed);
+    setForm((f) => ({ ...f, images: next }));
   }
 
   function addSize() {
     setForm((f) => ({ ...f, sizes: [...f.sizes, { size: "", stock: "0" }] }));
   }
   function removeSize(i: number) {
-    setForm((f) => ({
-      ...f,
-      sizes: f.sizes.filter((_, idx) => idx !== i),
-    }));
+    setForm((f) => ({ ...f, sizes: f.sizes.filter((_, idx) => idx !== i) }));
   }
   function updateSize(i: number, field: "size" | "stock", value: string) {
     setForm((f) => ({
       ...f,
-      sizes: f.sizes.map((s, idx) =>
-        idx === i ? { ...s, [field]: value } : s
-      ),
+      sizes: f.sizes.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)),
     }));
   }
 
@@ -267,47 +303,90 @@ export default function ProductForm({ productId, onSuccess }: ProductFormProps) 
           </label>
         </div>
       )}
+
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="block text-sm font-medium text-fp-black">
-            Imágenes (URL)
+            Imágenes (PNG, JPG · máx 4 MB)
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
           <button
             type="button"
-            onClick={addImage}
-            className="text-sm text-fp-black hover:underline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="text-sm text-fp-black hover:underline disabled:opacity-50"
           >
-            + Añadir imagen
+            {uploading ? "Subiendo…" : "+ Añadir imágenes"}
           </button>
         </div>
-        {form.images.map((img, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <input
-              type="url"
-              value={img.url}
-              onChange={(e) => updateImage(i, "url", e.target.value)}
-              placeholder="https://..."
-              className="flex-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
-            />
-            <input
-              type="text"
-              value={img.alt}
-              onChange={(e) => updateImage(i, "alt", e.target.value)}
-              placeholder="Alt"
-              className="w-24 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
-            />
-            {form.images.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeImage(i)}
-                className="text-red-600 text-sm hover:underline"
-              >
-                Quitar
-              </button>
-            )}
-          </div>
-        ))}
+        <p className="text-xs text-fp-gray mb-2">
+          La primera imagen es la principal. Podés reordenar con las flechas.
+        </p>
+        <div className="space-y-3">
+          {form.images.map((img, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 p-2 border border-gray-200 rounded"
+            >
+              <div className="w-16 h-16 shrink-0 bg-fp-light overflow-hidden rounded">
+                <img
+                  src={img.url}
+                  alt={img.alt || "Preview"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={img.alt}
+                  onChange={(e) => updateImageAlt(i, e.target.value)}
+                  placeholder="Texto alternativo (opcional)"
+                  className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-fp-black"
+                />
+                {i === 0 && (
+                  <p className="text-xs text-fp-gray mt-0.5">Imagen principal</p>
+                )}
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i - 1)}
+                  disabled={i === 0}
+                  className="p-1.5 border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100"
+                  title="Mover atrás"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i + 1)}
+                  disabled={i === form.images.length - 1}
+                  className="p-1.5 border border-gray-300 text-sm disabled:opacity-40 hover:bg-gray-100"
+                  title="Mover adelante"
+                >
+                  →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="p-1.5 text-red-600 text-sm hover:bg-red-50"
+                  title="Quitar"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="block text-sm font-medium text-fp-black">
