@@ -7,6 +7,9 @@ import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
+import AnnouncementBar from "@/components/store/AnnouncementBar";
+import StoreBenefits from "@/components/store/StoreBenefits";
+import StoreFooter from "@/components/store/StoreFooter";
 
 type Category = { id: string; name: string; slug: string };
 type Product = {
@@ -99,6 +102,7 @@ function TiendaContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <AnnouncementBar />
       <header className="border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur z-50">
         <div className="container-fp flex items-center justify-between h-16">
           <Link href="/" className="text-xl font-semibold tracking-tight text-fp-black">
@@ -114,8 +118,26 @@ function TiendaContent() {
         </div>
       </header>
 
-      <main className="flex-1 container-fp py-8">
-        <h1 className="text-3xl font-light text-fp-black mb-6">Tienda</h1>
+      <StoreBenefits />
+
+      <main className="flex-1 container-fp py-8 md:py-10">
+        <div className="mb-6 md:mb-8">
+          <nav className="text-sm text-fp-gray mb-2">
+            <Link href="/" className="hover:text-fp-black">Inicio</Link>
+            <span className="mx-2">/</span>
+            <span className="text-fp-black">Tienda</span>
+          </nav>
+          <h1 className="text-3xl md:text-4xl font-light text-fp-black">
+            Tienda
+          </h1>
+          {!loading && !apiError && (
+            <p className="text-fp-gray text-sm mt-1">
+              {products.length === 0
+                ? "No hay productos con esos filtros."
+                : `${products.length} ${products.length === 1 ? "producto" : "productos"}`}
+            </p>
+          )}
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="lg:w-56 shrink-0">
@@ -208,19 +230,19 @@ function TiendaContent() {
             ) : products.length === 0 ? (
               <p className="text-fp-gray">No hay productos con esos filtros.</p>
             ) : (
-              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {products.map((p) => (
                   <li key={p.id}>
                     <Link
                       href={`/tienda/${p.slug}`}
                       className="block group"
                     >
-                      <div className="aspect-[3/4] bg-fp-light mb-2 overflow-hidden relative">
+                      <div className="aspect-[3/4] bg-fp-light overflow-hidden relative mb-3">
                         {p.images[0] ? (
                           <img
                             src={p.images[0].url}
                             alt={p.images[0].alt ?? p.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-fp-gray text-sm">
@@ -228,10 +250,10 @@ function TiendaContent() {
                           </div>
                         )}
                       </div>
-                      <p className="font-medium text-fp-black text-sm group-hover:underline">
+                      <p className="font-medium text-fp-black text-sm group-hover:underline line-clamp-2">
                         {p.name}
                       </p>
-                      <p className="text-fp-gray text-sm mt-0.5">
+                      <p className="text-fp-black text-sm mt-1 font-medium">
                         {formatPrice(parseFloat(p.price), { currency: "ARS" })}
                       </p>
                     </Link>
@@ -243,11 +265,7 @@ function TiendaContent() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-200 py-8 mt-auto">
-        <div className="container-fp text-center text-sm text-fp-gray">
-          <p>© {new Date().getFullYear()} Falcon Prime.</p>
-        </div>
-      </footer>
+      <StoreFooter />
     </div>
   );
 }

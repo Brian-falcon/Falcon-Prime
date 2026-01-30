@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/cart-context";
+import StoreFooter from "@/components/store/StoreFooter";
 
 type Product = {
   id: string;
@@ -227,11 +228,7 @@ export default function ProductoPage() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-200 py-8 mt-auto">
-        <div className="container-fp text-center text-sm text-fp-gray">
-          <p>© {new Date().getFullYear()} Falcon Prime.</p>
-        </div>
-      </footer>
+      <StoreFooter />
     </div>
   );
 }

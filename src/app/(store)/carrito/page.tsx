@@ -126,11 +126,7 @@ export default function CarritoPage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-200 py-8 mt-auto">
-        <div className="container-fp text-center text-sm text-fp-gray">
-          <p>© {new Date().getFullYear()} Falcon Prime.</p>
-        </div>
-      </footer>
+      <StoreFooter />
     </div>
   );
 }
